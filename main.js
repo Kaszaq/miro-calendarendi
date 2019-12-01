@@ -5,11 +5,57 @@ const DAY_NAME_HEIGHT = 50;
 const MONTH_BOX_WIDTH = 7 * DAY_BOX_WIDTH;
 const METADATA_DATE_FORMAT = "YYYY-MM-DD";
 const SINGLE_BAR_COLORS = ["#8fd14f", "#4eaa40"];
+const DEFAULT_PREVIOUS_STYLE = {
+    backgroundColor: "#e6e6e6",
+    backgroundOpacity: 1,
+    bold: 0,
+    borderColor: "#808080",
+    borderOpacity: 1,
+    borderStyle: 2,
+    borderWidth: 1,
+    fontFamily: 10,
+    fontSize: 18,
+    highlighting: "",
+    italic: 0,
+    shapeType: 3,
+    strike: 0,
+    textAlign: "r",
+    textAlignVertical: "t",
+    textColor: "#1a1a1a",
+    underline: 0
+};
+const DEFAULT_ACTIVE_STYLE = {
+    backgroundColor: "#e6e6e6",
+    backgroundOpacity: 1,
+    bold: 0,
+    borderColor: "#f24726",
+    borderOpacity: 1,
+    borderStyle: 2,
+    borderWidth: 3,
+    fontFamily: 10,
+    fontSize: 18,
+    highlighting: "",
+    italic: 0,
+    shapeType: 3,
+    strike: 0,
+    textAlign: "r",
+    textAlignVertical: "t",
+    textColor: "#1a1a1a",
+    underline: 0
+}
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // I know I can get this from moment / format / 'ddd'
 function getSingleTopBarColor(number) {
     return SINGLE_BAR_COLORS[number % 2];
 }
-
+function makeid(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
 function drawIt(initialPosX, initialPosY, pData, calendarId) {
     pData = pData || moment();
 
@@ -96,45 +142,11 @@ function drawIt(initialPosX, initialPosY, pData, calendarId) {
                 }
             };
             if (active) {
-                style = {
-                    backgroundColor: "#e6e6e6",
-                    backgroundOpacity: 1,
-                    bold: 0,
-                    borderColor: "#f24726",
-                    borderOpacity: 1,
-                    borderStyle: 2,
-                    borderWidth: 3,
-                    fontFamily: 10,
-                    fontSize: 18,
-                    highlighting: "",
-                    italic: 0,
-                    shapeType: 3,
-                    strike: 0,
-                    textAlign: "r",
-                    textAlignVertical: "t",
-                    textColor: "#1a1a1a",
-                    underline: 0
-                }
+
+                style = DEFAULT_ACTIVE_STYLE;
             } else {
-                style = {
-                    backgroundColor: "#e6e6e6",
-                    backgroundOpacity: 1,
-                    bold: 0,
-                    borderColor: "#808080",
-                    borderOpacity: 1,
-                    borderStyle: 2,
-                    borderWidth: 1,
-                    fontFamily: 10,
-                    fontSize: 18,
-                    highlighting: "",
-                    italic: 0,
-                    shapeType: 3,
-                    strike: 0,
-                    textAlign: "r",
-                    textAlignVertical: "t",
-                    textColor: "#1a1a1a",
-                    underline: 0
-                }
+
+                style = DEFAULT_PREVIOUS_STYLE
             }
         } else {
             style = {
@@ -173,8 +185,53 @@ function drawIt(initialPosX, initialPosY, pData, calendarId) {
     createWidgets(widgetsToCreate);
 }
 
-async function transitionCalendar(calendarId, days) {
 
+async function changeWidgets(pMoment, calendarId, previousCount, activeStyle, previousStyle) {
+    //set previous styles
+    let diff = previousCount > 0 ? 1 : -1;
+    let i = 0;
+    let widgetsToUpdate = [];
+    // previous
+    while (i !== previousCount) {
+        (await miro.board.widgets.get({
+            metadata: {
+                [CLIENT_ID]: {
+                    calendarId: calendarId,
+                    date: pMoment.clone().subtract(i + diff, 'days').format(METADATA_DATE_FORMAT)
+                }
+            }
+        })).forEach(w => {
+            w.style = previousStyle;
+            w.metadata[CLIENT_ID].active = false;
+            widgetsToUpdate.push(w);
+        });
+        i += diff;
+    }
+    // new actives
+    (await miro.board.widgets.get({
+        metadata: {
+            [CLIENT_ID]: {
+                calendarId: calendarId,
+                date: pMoment.format(METADATA_DATE_FORMAT)
+            }
+        }
+    })).forEach(w => {
+        if (!w.metadata[CLIENT_ID].active) {
+
+            w.style = activeStyle;
+            w.metadata[CLIENT_ID].active = true;
+            widgetsToUpdate.push(w);
+        }
+    });
+    if (widgetsToUpdate.length === 0) {
+        return [];
+    } else {
+        return updateWidgets(widgetsToUpdate);
+    }
+}
+
+
+async function moveToDate(pMoment, calendarId) {
     let activeWidgets = (await miro.board.widgets.get({
         metadata: {
             [CLIENT_ID]: {
@@ -183,18 +240,64 @@ async function transitionCalendar(calendarId, days) {
             }
         }
     }));
-    if (activeWidgets.length === 0) return;
+    // todo: find earliest actually to avoid any bugs, or latest... or maybe run this for each active separately?... omg
 
-    moment(widgets[0].metadata[CLIENT_ID].date); //choosing one, if it would happen the date mismatch then well, we can then think how to tackle this, for now this case is going to be ignored.
 
-    let activeStyle = widgets[0].style;
-    let
+    let activeStyle;
+    let previousStyle;
+    let previousCount;
+    if (activeWidgets.length === 0) {
+        activeStyle = DEFAULT_ACTIVE_STYLE;
+        previousStyle = DEFAULT_PREVIOUS_STYLE;// TODO: would be best to refactor this to try find closes widget style to current Date and this apply as "previous one", instead of going to default
+        previousCount = 0;
+    } else {
+        let selectedActiveWidget = activeWidgets[0];
+        activeStyle = selectedActiveWidget.style;
+        let activeWidgetMoment = moment(selectedActiveWidget.metadata[CLIENT_ID].date);
+        let previousIsPrevious = activeWidgetMoment.isSameOrBefore(pMoment);
+        let diff = previousIsPrevious ? 1 : -1;
+        let mathOp = previousIsPrevious ? Math.ceil : Math.floor
+        let previousToActiveWidgets = (await miro.board.widgets.get({ // TODO: would be best to refactor this to try find previous widget by finding next one closest, not checking only 1 day diff as it might have been deleted yet some other days might have been not.
+            metadata: {
+                [CLIENT_ID]: {
+                    calendarId: calendarId,
+                    date: activeWidgetMoment.clone().subtract(diff, 'days').format(METADATA_DATE_FORMAT)
+                }
+            }
+        }));
+        previousCount = mathOp(pMoment.diff(activeWidgetMoment, 'days', true));
+        if (previousToActiveWidgets.length === 0) {
+            previousStyle = DEFAULT_PREVIOUS_STYLE;
+        } else {
+            previousStyle = previousToActiveWidgets[0].style;
+        }
+    }
+    return changeWidgets(pMoment, calendarId, previousCount, activeStyle, previousStyle);
+}
 
+async function activateDay(moment) {
+    let allWidgetsMadeByPlugin = (await miro.board.widgets.get('metadata.' + CLIENT_ID));
+
+    let calendarIds = allWidgetsMadeByPlugin.map(w => {
+        return w.metadata[CLIENT_ID].calendarId
+    });
+    let uniqueCalendarIds = new Set(calendarIds);
+    for (let calendarId of uniqueCalendarIds) {
+        moveToDate(moment,
+            calendarId
+        )
+    }
 }
 
 let authorizer = new Authorizer(["boards:write", "boards:read"]);
-miro.onReady(() => {
-
+miro.onReady(async () => {
+    if (!await authorizer.isAuthorized()) {
+        authorizer.registerPostAuthFunction(() => {
+            activateDay(moment());
+        });
+    } else {
+        activateDay(moment());
+    }
     miro.initialize({
         extensionPoints: {
             toolbar: {
@@ -216,7 +319,16 @@ miro.onReady(() => {
                         let viewport = await miro.board.viewport.getViewport();
                         let x = viewport.x + 0.3 * viewport.width;
                         let y = viewport.y + 0.3 * viewport.height;
-                        drawIt(x, y, moment(), "XYZ123");
+                        let randomId = makeid(10);
+
+                        //todo: below should be rewritten once it is parametrised an user can actually select which months he wants to add, but maybe, just maybe... this is sufficient? :)
+                        drawIt(x, y, moment(), randomId);
+                        let boardHeight = MONTH_BOX_HEIGHT+DAY_BOX_HEIGHT*6+DAY_NAME_HEIGHT;
+                        drawIt(x, y-boardHeight, moment().add(-1, 'month'), randomId);
+
+                        drawIt(x, y+boardHeight, moment().add(1, 'month'), randomId);
+                        drawIt(x, y+2*boardHeight, moment().add(2, 'month'), randomId);
+                        drawIt(x, y+3*boardHeight, moment().add(3, 'month'), randomId);
                     }
                 }
             }

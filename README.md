@@ -1,40 +1,30 @@
 # Plugin for Miro - import charts
 
-This plugin allows to easily import charts from spreadsheets/tables into Miro. 
+This plugin allows to create calendars which update themselves each day. Each day the previously active day style is copied applied onto a current date box. 
+Previous days have style applied the same as day before previously active day. Because of that behaviour this allows for some cool use cases!
 
-### Currently supported charts
- Org chart
- 
-![Org chart](docs/orgChart.gif)
+## Use cases
+There are multiple use cases for use of this plugin.
 
-Gantt chart
+#### Just as normal calendar where you can for instance put your notes on with team members holdays
 
-![Gantt chart](docs/gantt.gif)
+#### Mark current date on some timeline
+
+#### Mark progress or incoming doom
+
+#### Highlight day of the week in some table
 
 
 ## Installation
-[CLICK HERE](https://miro.com/oauth/authorize/?response_type=token&client_id=3074457347050462782&redirect_uri=https://kaszaq.github.io/miro-chart-importer/installComplete.html) to install plugin in Miro.
-
-## Sample data
-
-Sample data to play around with this plugin is available [here](https://docs.google.com/spreadsheets/d/1Sw2g8WMVEoN1WZcd3oco1MXBeZVRDkFr__USVw8HF4Y/edit?usp=sharing)
+[CLICK HERE](https://miro.com/oauth/authorize/?response_type=token&client_id=3074457347056504522&redirect_uri=https://kaszaq.github.io/miro-chart-importer/installComplete.html) to install plugin in Miro.
 
 ## Why
 
-There are types of charts that once created you wish to modify them, change they way they look, adjust a little. On daily basis you have this data in spreadsheet or at least you can export it into spreadsheets.
-However it is not as simple then to draw them all. For instance the way you can adjust org chart in Google Sheets is almost non existant. With Miro you do not have those limitations however importing this data might be 
-very time consuming.
-
-With this plugin it is possible to import this data into Miro and automatically convert it into initial charts you can later on adjust to your needs.
-
-## Use case
-
-* To simplify creation of charts in Miro that would take otherwise a lot time to recreate.
-* To have a simple way of adjusting in Miro the UX of charts where other tools, like spreadsheets, fail.
-
-Note: some charts that could be added to this plugin, for instance line chart, might actually not have too high value when for instance google spreadsheets create quite nice and sufficient to most use cases graphs like that and user could just copy paste the image of such graph into Miro.
+* to easily create a calendar on which we could add cross team notes, like who is on holidays/conference so it would be easily visible next to our kanban board
+* to see nicely what is the current date on our project timelines
 
 ## Known issues & upcoming features
-* currently draws only 3 month forward, would be better to have this selected by the user
+* currently draws only 3 month forward and one previous, would be better to have this selected by the user
 * which timezone is this actually? Code should handle this for instance by setting the timezone in metadata
-* would be nice if users could test functionality of changing days somehow using modal on bottom? Otherwise then can only assume, but maybe that is suffcient?
+* would be nice if users could test functionality of changing days somehow using modal on bottom? Otherwise then can only assume, but maybe that is sufficient?
+* when a board is opened and day changes it should also update the board date. Currently it is not and date update is triggered only during board open.
