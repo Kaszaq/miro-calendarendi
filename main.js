@@ -301,7 +301,7 @@ miro.onReady(async () => {
     miro.initialize({
         extensionPoints: {
             toolbar: {
-                title: 'Import charts',
+                title: 'Add calendar',
                 toolbarSvgIcon: '<path fill-rule="evenodd" clip-rule="evenodd" d="M4 4V20H20V4H4ZM3 2C2.44772 2 2 2.44772 2 3V21C2 21.5523 2.44772 22 3 22H21C21.5523 22 22 21.5523 22 21V3C22 2.44772 21.5523 2 21 2H3Z" fill="currentColor"/>\n' +
                     '<path fill-rule="evenodd" clip-rule="evenodd" d="M4 5.8V20.2H20V5.8H4ZM3 4C2.44772 4 2 4.40294 2 4.9V21.1C2 21.5971 2.44772 22 3 22H21C21.5523 22 22 21.5971 22 21.1V4.9C22 4.40294 21.5523 4 21 4H3Z" fill="currentColor"/>\n' +
                     '<path fill-rule="evenodd" clip-rule="evenodd" d="M4 5.8V20.2H20V5.8H4ZM3 4C2.44772 4 2 4.40294 2 4.9V21.1C2 21.5971 2.44772 22 3 22H21C21.5523 22 22 21.5971 22 21.1V4.9C22 4.40294 21.5523 4 21 4H3Z" fill="currentColor"/>\n' +
