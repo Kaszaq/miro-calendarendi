@@ -4,7 +4,7 @@ This plugin allows to create calendars which update themselves each day. Each da
 Previous days have style applied the same as day before previously active day. Because of that behaviour this allows for some cool use cases!
 
 ## Use cases
-There are multiple use cases for use of this plugin.
+There are multiple use cases for use of this plugin. Short showcase can be found here https://www.youtube.com/watch?v=bSJQVUzjopQ&feature=youtu.be
 
 #### Just as normal calendar where you can for instance put your notes on with team members holdays
 
@@ -20,7 +20,7 @@ There are multiple use cases for use of this plugin.
 
 
 ## Installation
-[CLICK HERE](https://miro.com/oauth/authorize/?response_type=token&client_id=3074457347056504522&redirect_uri=https://kaszaq.github.io/miro-chart-importer/installComplete.html) to install plugin in Miro.
+[CLICK HERE](https://miro.com/oauth/authorize/?response_type=token&client_id=3074457347056504522&redirect_uri=https://kaszaq.github.io/miro-calendarendi/installComplete.html) to install plugin in Miro.
 
 ## Why
 
