@@ -1,4 +1,4 @@
-# Plugin for Miro - import charts
+# Plugin for Miro - Calendarendi
 
 This plugin allows to create calendars which update themselves each day. Each day the previously active day style is copied applied onto a current date box. 
 Previous days have style applied the same as day before previously active day. Because of that behaviour this allows for some cool use cases!
