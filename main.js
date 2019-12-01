@@ -1,46 +1,143 @@
-let statusUpdateListener = new StatusListener();
-function ParsingDataError(message) {
-    this.message = message;
+const DAY_BOX_HEIGHT = 100;
+const DAY_BOX_WIDTH = 100;
+const MONTH_BOX_HEIGHT = 100;
+const DAY_NAME_HEIGHT=50;
+const MONTH_BOX_WIDTH = 7 * DAY_BOX_WIDTH;
+const SINGLE_BAR_COLORS = ["#8fd14f", "#4eaa40"];
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+function getSingleTopBarColor(number) {
+    return SINGLE_BAR_COLORS[number % 2];
 }
-function handlePastedData(event) {
-    let e = event.data; // unpack the event
-    let func;
-    if (e.type == 'pasted_gantt') {
-        miro.board.ui.closeModal();
-        func = createGanttChart;
 
-    } else if (e.type == 'pasted_orgChart') {
-        miro.board.ui.closeModal();
-        func = createOrgChart;
+function drawIt(initialPosX, initialPosY, pData, calendarId) {
+    pData = pData || moment();
+
+    // this is drawing one month
+    let widgetsToCreate = []
+    let minDate = pData.clone().startOf('month').startOf('isoWeek');;
+    let maxDate = pData.clone().endOf('month').endOf('isoWeek');
+    let monthNumber = pData.month();
+    widgetsToCreate.push({
+        type: 'shape',
+        text: "<p>" + pData.format('MMMM YYYY') + "</p>",
+        x: initialPosX + MONTH_BOX_WIDTH / 2,
+        y: initialPosY + MONTH_BOX_HEIGHT / 2,
+        width: MONTH_BOX_WIDTH,
+        height: MONTH_BOX_HEIGHT,
+        style: {
+            backgroundColor: "#8fd14f",
+            backgroundOpacity: 1,
+            bold: 0,
+            borderColor: "#808080",
+            borderOpacity: 1,
+            borderStyle: 2,
+            borderWidth: 1,
+            fontFamily: 0,
+            fontSize: 24,
+            highlighting: 0,
+            italic: 0,
+            shapeType: 3,
+            strike: 0,
+            textAlign: "c",
+            textAlignVertical: "m",
+            textColor: "#000000",
+            underline: 0,
+        }
+    });
+
+    for (let i =0;i<7;i++){
+        widgetsToCreate.push({
+            type: 'shape',
+            text: DAY_NAMES[i],
+            x: initialPosX + DAY_BOX_WIDTH / 2 + DAY_BOX_WIDTH * i,
+            y: initialPosY + MONTH_BOX_HEIGHT + DAY_NAME_HEIGHT / 2,
+            width: DAY_BOX_WIDTH,
+            height: DAY_NAME_HEIGHT,
+            style: {
+                backgroundColor: "#cee741",
+                backgroundOpacity: 1,
+                bold: 0,
+                borderColor: "#808080",
+                borderOpacity: 1,
+                borderStyle: 2,
+                borderWidth: 1,
+                fontFamily: 10,
+                fontSize: 24,
+                highlighting: 0,
+                italic: 0,
+                shapeType: 3,
+                strike: 0,
+                textAlign: "c",
+                textAlignVertical: "t",
+                textColor: "#1a1a1a",
+                underline: 0,
+            }
+        });
     }
-    if (func) {
-        //miro.board.ui.__hideButtonsPanels('all');
-        //miro.board.__disableLeftClickOnCanvas() //buggy, doesnt work as expected:(
-        miro.board.ui.openBottomPanel("statusDisplayer.html", {width: 280});
+    let tempMoment = minDate.clone();
+    let days = 0;
 
-        setTimeout(function(){
-            func.apply(null, [e.data, statusUpdateListener])
-                .then(() => {
-                    statusUpdateListener.success();
-                })
-                .catch(e => {
-                    if (e instanceof ParsingDataError) {
-                        miro.showErrorNotification(e.message);
-                    }
-                    // todo: open modal or some other window with additional info of what failed
-                    statusUpdateListener.fail();
-                })
-            ;
-        },50);
-
+    while (tempMoment.isSameOrBefore(maxDate)) {
+        let style;
+        if(monthNumber===tempMoment.month()){
+            style={
+                backgroundColor: "#e6e6e6",
+                backgroundOpacity: 1,
+                bold: 0,
+                borderColor: "#808080",
+                borderOpacity: 1,
+                borderStyle: 2,
+                borderWidth: 1,
+                fontFamily: 10,
+                fontSize: 18,
+                highlighting: "",
+                italic: 0,
+                shapeType: 3,
+                strike: 0,
+                textAlign: "r",
+                textAlignVertical: "t",
+                textColor: "#1a1a1a",
+                underline: 0
+            }
+        } else {
+            style={
+                backgroundColor: "#fbfbfb",
+                backgroundOpacity: 1,
+                bold: 0,
+                borderColor: "#808080",
+                borderOpacity: 1,
+                borderStyle: 2,
+                borderWidth: 1,
+                fontFamily: 10,
+                fontSize: 18,
+                highlighting: "",
+                italic: 0,
+                shapeType: 3,
+                strike: 0,
+                textAlign: "r",
+                textAlignVertical: "t",
+                textColor: "#a4a4a4",
+                underline: 0
+            }
+        }
+        widgetsToCreate.push({
+            type: 'shape',
+            text: "" + tempMoment.date(),
+            x: initialPosX + DAY_BOX_WIDTH / 2 + DAY_BOX_WIDTH * (tempMoment.isoWeekday() - 1),
+            y: initialPosY + MONTH_BOX_HEIGHT + DAY_NAME_HEIGHT + DAY_BOX_HEIGHT / 2 + Math.floor(days/7) * DAY_BOX_HEIGHT,
+            width: DAY_BOX_WIDTH,
+            height: DAY_BOX_HEIGHT,
+            style: style
+        });
+        days++;
+        tempMoment.add(1, 'days');
     }
+    createWidgets(widgetsToCreate);
 
-    // todo: lock it from user interactions, show modal on bottom with progress bar
-    //todo: na koncu zoom'a: miro.board.viewport.zoomToObject(widget)
 
 }
+
 let authorizer = new Authorizer(["boards:write", "boards:read"]);
-let l;
 miro.onReady(() => {
 
     miro.initialize({
@@ -61,8 +158,10 @@ miro.onReady(() => {
 
                 onClick: async function () {
                     if (await authorizer.authorized()) {
-                        if(!l) l= miro.addListener('DATA_BROADCASTED', handlePastedData);
-                        return miro.board.ui.openLibrary('content.html#', {title: 'Charts importer'});
+                        let viewport = await miro.board.viewport.getViewport();
+                        let x = viewport.x + 0.3 * viewport.width;
+                        let y = viewport.y + 0.3 * viewport.height;
+                        drawIt(x, y);
                     }
                 }
             }

@@ -17,26 +17,38 @@ function contains(a1, a2) {
 class Authorizer {
     authorizeOptions = {
         response_type: 'token',
-        redirect_uri: 'https://kaszaq.github.io/miro-chart-importer/authFinished.html'
+        redirect_uri: 'https://kaszaq.github.io/miro-calendarendi/authFinished.html'
     };
-
+    initPostAuth;
     constructor(requiredScope) {
         this.requiredScope = requiredScope;
         this.authz = false;
-        this.promptForBoardReload = false;
+    }
+
+    async isAuthorized() { // todo: rename checkIsAuthorized
+        if (!this.authz) {
+            this.authz = contains(await miro.currentUser.getScopes(), this.requiredScope);
+        }
+        return this.authz;
+    }
+
+    registerPostAuthFunction(postAuthFunction){
+        this.initPostAuth = postAuthFunction;
     }
 
     async authorized() {
-        if (!this.authz) {
-            this.authz = contains(await miro.currentUser.getScopes(), this.requiredScope);
-            if (!this.authz) {
-                authorizer.authorize();
-                this.promptForBoardReload = true;
-            }
+        if(await this.isAuthorized()){
+            return true;
         }
-        if (this.authz && this.promptForBoardReload) miro.showErrorNotification("To use this plugin you need to reload the board after plugin authorization.");
 
-        return this.promptForBoardReload ? false : this.authz;
+        let _parent = this;
+        authorizer.authorize().then(async ()=>{
+            if(_parent.initPostAuth && await _parent.isAuthorized()){
+                _parent.initPostAuth();
+            }
+        });
+        return false;
+
     }
 
     async authorize() {
