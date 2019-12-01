@@ -14,6 +14,10 @@ There are multiple use cases for use of this plugin.
 
 #### Highlight day of the week in some table
 
+#### Highlight week
+
+#### Highlight month
+
 
 ## Installation
 [CLICK HERE](https://miro.com/oauth/authorize/?response_type=token&client_id=3074457347056504522&redirect_uri=https://kaszaq.github.io/miro-chart-importer/installComplete.html) to install plugin in Miro.
