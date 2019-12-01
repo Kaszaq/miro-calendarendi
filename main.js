@@ -1,10 +1,11 @@
 const DAY_BOX_HEIGHT = 100;
 const DAY_BOX_WIDTH = 100;
 const MONTH_BOX_HEIGHT = 100;
-const DAY_NAME_HEIGHT=50;
+const DAY_NAME_HEIGHT = 50;
 const MONTH_BOX_WIDTH = 7 * DAY_BOX_WIDTH;
+const METADATA_DATE_FORMAT = "YYYY-MM-DD";
 const SINGLE_BAR_COLORS = ["#8fd14f", "#4eaa40"];
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // I know I can get this from moment / format / 'ddd'
 function getSingleTopBarColor(number) {
     return SINGLE_BAR_COLORS[number % 2];
 }
@@ -14,7 +15,8 @@ function drawIt(initialPosX, initialPosY, pData, calendarId) {
 
     // this is drawing one month
     let widgetsToCreate = []
-    let minDate = pData.clone().startOf('month').startOf('isoWeek');;
+    let minDate = pData.clone().startOf('month').startOf('isoWeek');
+    ;
     let maxDate = pData.clone().endOf('month').endOf('isoWeek');
     let monthNumber = pData.month();
     widgetsToCreate.push({
@@ -45,7 +47,7 @@ function drawIt(initialPosX, initialPosY, pData, calendarId) {
         }
     });
 
-    for (let i =0;i<7;i++){
+    for (let i = 0; i < 7; i++) {
         widgetsToCreate.push({
             type: 'shape',
             text: DAY_NAMES[i],
@@ -76,31 +78,66 @@ function drawIt(initialPosX, initialPosY, pData, calendarId) {
     }
     let tempMoment = minDate.clone();
     let days = 0;
-
+    let todayFormattedText = moment().format(METADATA_DATE_FORMAT);
     while (tempMoment.isSameOrBefore(maxDate)) {
         let style;
-        if(monthNumber===tempMoment.month()){
-            style={
-                backgroundColor: "#e6e6e6",
-                backgroundOpacity: 1,
-                bold: 0,
-                borderColor: "#808080",
-                borderOpacity: 1,
-                borderStyle: 2,
-                borderWidth: 1,
-                fontFamily: 10,
-                fontSize: 18,
-                highlighting: "",
-                italic: 0,
-                shapeType: 3,
-                strike: 0,
-                textAlign: "r",
-                textAlignVertical: "t",
-                textColor: "#1a1a1a",
-                underline: 0
+        let metadata;
+        let active = false;
+        let dayFormattedText = tempMoment.format(METADATA_DATE_FORMAT);
+
+        if (monthNumber === tempMoment.month()) {
+            active = dayFormattedText === todayFormattedText;
+            metadata = {
+                [CLIENT_ID]: {
+                    calendarId: calendarId,
+                    date: dayFormattedText,
+                    active: active
+
+                }
+            };
+            if (active) {
+                style = {
+                    backgroundColor: "#e6e6e6",
+                    backgroundOpacity: 1,
+                    bold: 0,
+                    borderColor: "#f24726",
+                    borderOpacity: 1,
+                    borderStyle: 2,
+                    borderWidth: 3,
+                    fontFamily: 10,
+                    fontSize: 18,
+                    highlighting: "",
+                    italic: 0,
+                    shapeType: 3,
+                    strike: 0,
+                    textAlign: "r",
+                    textAlignVertical: "t",
+                    textColor: "#1a1a1a",
+                    underline: 0
+                }
+            } else {
+                style = {
+                    backgroundColor: "#e6e6e6",
+                    backgroundOpacity: 1,
+                    bold: 0,
+                    borderColor: "#808080",
+                    borderOpacity: 1,
+                    borderStyle: 2,
+                    borderWidth: 1,
+                    fontFamily: 10,
+                    fontSize: 18,
+                    highlighting: "",
+                    italic: 0,
+                    shapeType: 3,
+                    strike: 0,
+                    textAlign: "r",
+                    textAlignVertical: "t",
+                    textColor: "#1a1a1a",
+                    underline: 0
+                }
             }
         } else {
-            style={
+            style = {
                 backgroundColor: "#fbfbfb",
                 backgroundOpacity: 1,
                 bold: 0,
@@ -124,16 +161,34 @@ function drawIt(initialPosX, initialPosY, pData, calendarId) {
             type: 'shape',
             text: "" + tempMoment.date(),
             x: initialPosX + DAY_BOX_WIDTH / 2 + DAY_BOX_WIDTH * (tempMoment.isoWeekday() - 1),
-            y: initialPosY + MONTH_BOX_HEIGHT + DAY_NAME_HEIGHT + DAY_BOX_HEIGHT / 2 + Math.floor(days/7) * DAY_BOX_HEIGHT,
+            y: initialPosY + MONTH_BOX_HEIGHT + DAY_NAME_HEIGHT + DAY_BOX_HEIGHT / 2 + Math.floor(days / 7) * DAY_BOX_HEIGHT,
             width: DAY_BOX_WIDTH,
             height: DAY_BOX_HEIGHT,
-            style: style
+            style: style,
+            metadata: metadata
         });
         days++;
         tempMoment.add(1, 'days');
     }
     createWidgets(widgetsToCreate);
+}
 
+async function transitionCalendar(calendarId, days) {
+
+    let activeWidgets = (await miro.board.widgets.get({
+        metadata: {
+            [CLIENT_ID]: {
+                calendarId: calendarId,
+                active: true
+            }
+        }
+    }));
+    if (activeWidgets.length === 0) return;
+
+    moment(widgets[0].metadata[CLIENT_ID].date); //choosing one, if it would happen the date mismatch then well, we can then think how to tackle this, for now this case is going to be ignored.
+
+    let activeStyle = widgets[0].style;
+    let
 
 }
 
@@ -161,7 +216,7 @@ miro.onReady(() => {
                         let viewport = await miro.board.viewport.getViewport();
                         let x = viewport.x + 0.3 * viewport.width;
                         let y = viewport.y + 0.3 * viewport.height;
-                        drawIt(x, y);
+                        drawIt(x, y, moment(), "XYZ123");
                     }
                 }
             }
