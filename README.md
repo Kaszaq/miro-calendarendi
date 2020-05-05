@@ -32,3 +32,19 @@ There are multiple use cases for use of this plugin. Short showcase can be found
 * which timezone is this actually? Code should handle this for instance by setting the timezone in metadata
 * would be nice if users could test functionality of changing days somehow using modal on bottom? Otherwise then can only assume, but maybe that is sufficient?
 * when a board is opened and day changes it should also update the board date. Currently it is not and date update is triggered only during board open.
+
+## License
+
+Copyright 2020 Michał Kasza
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
